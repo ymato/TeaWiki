@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+    >
+<TextView
+    android:id="@+id/title"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textStyle="bold"
+    android:text="凤凰单从茶"
+    android:textSize="12sp"
+    android:padding="15dp"
+    />
+    <TextView
+        android:id="@+id/source"
+        android:layout_below="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="原创"
+        android:textSize="10dp"
+        android:paddingLeft="15dp"/>
+    <TextView
+        android:id="@+id/author"
+        android:layout_below="@+id/title"
+        android:layout_toRightOf="@id/source"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="bubu123"
+        android:textSize="10dp"
+        android:paddingLeft="10dp"/>
+    <TextView
+        android:id="@+id/date"
+        android:layout_below="@+id/title"
+        android:layout_toRightOf="@id/author"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="11月6日11:50"
+        android:textSize="10dp"
+        android:paddingLeft="10dp"/>
+
+    <ImageView
+        android:id="@+id/pic"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:src="@mipmap/ic_launcher"
+        android:paddingTop="10dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignBottom="@+id/date"/>
+</RelativeLayout>

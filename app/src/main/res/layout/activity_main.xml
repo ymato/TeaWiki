@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.MainActivity">
+
+
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#c4c4c9">
+
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tab_layout"
+            android:layout_below="@+id/tabLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            app:tabTextColor="#000"
+            app:tabSelectedTextColor="#07b31e"
+            app:tabIndicatorColor="#07b31e"
+            android:layout_weight="5"
+            app:tabMode="fixed">
+        </android.support.design.widget.TabLayout>
+
+<ImageView
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:id="@+id/imageView"
+    android:src="@mipmap/more"
+    android:clickable="true"
+    android:onClick="showMenu"
+    />
+
+    </LinearLayout>
+        <android.support.v4.view.ViewPager
+            android:id="@+id/view_pager"
+            android:layout_below="@id/linearLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+        </android.support.v4.view.ViewPager>
+
+
+</RelativeLayout>
