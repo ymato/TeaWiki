@@ -24,6 +24,7 @@ import android.widget.ListView;
 import com.agini.teawiki.R;
 import com.agini.teawiki.adapter.HeadPagerAdapter;
 import com.agini.teawiki.adapter.TopPagerAdapter;
+import com.agini.teawiki.animation.ScaleInOutTransformer;
 import com.agini.teawiki.bean.HeadLine;
 import com.agini.teawiki.bean.Top;
 import com.agini.teawiki.callback.ImageCallback;
@@ -53,17 +54,19 @@ public class TopFragment extends Fragment {
     private int index = 1;
     private PullToRefreshListView mListView;
 
-    private BaseAdapter mAdapter;
     private List<ImageView> mImage = new ArrayList<>();
-    private PagerAdapter   headAdapter = new HeadPagerAdapter(getContext(), mImage);;
-
-
+    private PagerAdapter   headAdapter;
     List<Top.Data> mData = new ArrayList<>();
 
+    private BaseAdapter mAdapter ;
 
     List<HeadLine.DataBean> headData = new ArrayList<>();
 
-    private int currentPosition = 1;
+    private View headerView;
+
+   private  ViewPager viewPager;
+
+    private int currentPosition = 0;
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -77,7 +80,7 @@ public class TopFragment extends Fragment {
                     Log.d("flag", "-------------->handleMessage: " + bytes.length);
                     //保存数据到sdCard
                     String root = getContext().getExternalCacheDir().getAbsolutePath();
-                    String fileName = "top" + index;
+                    String fileName = File.separator+"top" + index;
                     SdCardUtils.saveFile(bytes, root, fileName);
                     Top top = JSON.parseObject(new String(bytes), Top.class);
                     Log.d("flag", "-------------->handleMessage: top.toString()" + top.toString());
@@ -95,7 +98,7 @@ public class TopFragment extends Fragment {
                     Log.d("flag", "-------------->handleMessage: headBytes.length) " + headBytes.length);
                     //保存数据到sdCard
                     String root1 = getContext().getExternalCacheDir().getAbsolutePath();
-                    String headFileName = "head" + index;
+                    String headFileName =File.separator+ "head" + index;
                     SdCardUtils.saveFile(headBytes, root1, headFileName);
                     HeadLine headLine = JSON.parseObject(new String(headBytes), HeadLine.class);
                     Log.d("flag", "-------------->handleMessage: headLine.toString()" + headLine.toString());
@@ -122,7 +125,15 @@ public class TopFragment extends Fragment {
 
 
                     break;
-
+                case 911:
+                    currentPosition++;
+                    if (currentPosition>2){
+                        currentPosition=0;
+                    }
+                    viewPager.setCurrentItem(currentPosition,false);
+                    viewPager.setPageTransformer(true,new ScaleInOutTransformer());
+                    this.sendEmptyMessageDelayed(911,4000);
+                    break;
             }
         }
     };
@@ -141,21 +152,24 @@ public class TopFragment extends Fragment {
         initData(index);
         initListView();
 
-
+        mHandler.sendEmptyMessageDelayed(911,4000);
         return ret;
     }
 
     private void initData(int index) {
+        mAdapter  = new TopPagerAdapter(getContext(), mData);
         if (NetworkUtils.isConnected(getContext())) {
             //如果有网络从网上下载数据
             String path = String.format(url, index);
             //String path=headUrl;
             Log.d("flag", "-------------->initData: " + path);
             getByteFromUrl(path, mHandler);
+
         } else {
             //无网络从本地读取
             String root = getContext().getExternalCacheDir().getAbsolutePath();
             String fileName = root + File.separator + "top" + index;
+            Log.d("flag", "-------------->initData: fileName" +fileName);
             byte[] bytes = SdCardUtils.getbyteFromFile(fileName);
             if (bytes != null) {
                 Top top = JSON.parseObject(new String(bytes), Top.class);
@@ -170,9 +184,9 @@ public class TopFragment extends Fragment {
 
 
     private void initListView() {
-        mAdapter = new TopPagerAdapter(getContext(), mData);
+
         final ListView listView = mListView.getRefreshableView();
-        View headerView = LayoutInflater.from(getContext()).inflate(R.layout.header_view, listView, false);
+         headerView = LayoutInflater.from(getContext()).inflate(R.layout.header_view, listView, false);
         initViewPager(headerView);
 
         listView.addHeaderView(headerView);
@@ -251,37 +265,32 @@ public class TopFragment extends Fragment {
     }
 
     private void initViewPager(View headerView) {
-        ViewPager viewPager = (ViewPager) headerView.findViewById(R.id.viewPager);
-        if (NetworkUtils.isConnected(getContext())) {
+        viewPager = (ViewPager) headerView.findViewById(R.id.viewPager);
+        for (int i = 0; i < headData.size(); i++) {
+            ImageView imageView = new ImageView(getContext());
+            imageView.setImageResource(R.mipmap.ic_launcher);
+            mImage.add(imageView);
+            headAdapter.notifyDataSetChanged();
+        }
+
+          headAdapter = new HeadPagerAdapter(getContext(), mImage);
+            if (NetworkUtils.isConnected(getContext())){
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     byte[] datas = HttpUtils.getByteFromUrl(headUrl);
-                    Log.d("flag", "-------------->run: datas.toString()" + datas.toString());
+                    // Log.d("flag", "-------------->run: datas.toString()" + datas.toString());
                     Message msg = Message.obtain();
                     msg.obj = datas;
                     msg.what = 2;
                     mHandler.sendMessage(msg);
                 }
             }).start();
-        } else {
-            //无网络从本地读取
-            String root = getContext().getExternalCacheDir().getAbsolutePath();
-            String fileName = root + File.separator + "head" + index;
-            byte[] datas = SdCardUtils.getbyteFromFile(fileName);
-            if (datas != null) {
-                HeadLine headLine = JSON.parseObject(new String(datas), HeadLine.class);
-                List<HeadLine.DataBean> headDatas = headLine.getData();
-                headData.addAll(headDatas);
-                headAdapter.notifyDataSetChanged();
-            }
-        }
-            for (int i = 0; i < headData.size(); i++) {
 
-                ImageView imageView = new ImageView(getContext());
-                imageView.setImageResource(R.mipmap.ic_launcher);
-                mImage.add(imageView);
             }
+
+
+
 
 
 

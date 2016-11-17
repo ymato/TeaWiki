@@ -26,6 +26,7 @@ import com.alibaba.fastjson.JSON;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,9 +47,6 @@ public class WikiFragment extends Fragment {
     List<Wiki.DataBean> mData = new ArrayList<>();
 
 
-
-
-
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -62,7 +60,7 @@ public class WikiFragment extends Fragment {
                     Log.d("flag", "-------------->handleMessage: " + bytes.length);
                     //保存数据到sdCard
                     String root = getContext().getExternalCacheDir().getAbsolutePath();
-                    String fileName = "wiki" + index;
+                    String fileName = File.separator + "wiki" + index;
                     SdCardUtils.saveFile(bytes, root, fileName);
                     Wiki wiki = JSON.parseObject(new String(bytes), Wiki.class);
                     Log.d("flag", "-------------->handleMessage: top.toString()" + wiki.toString());
@@ -96,6 +94,7 @@ public class WikiFragment extends Fragment {
     }
 
     private void initData(int index) {
+        mAdapter = new WikiPagerAdapter(getContext(), mData);
         if (NetworkUtils.isConnected(getContext())) {
             //如果有网络从网上下载数据
             String path = String.format(url, index);
@@ -103,28 +102,36 @@ public class WikiFragment extends Fragment {
             Log.d("flag", "-------------->initData: " + path);
             getByteFromUrl(path, mHandler);
         } else {
-            //无网络从本地读取
+            String root = getContext().getExternalCacheDir().getAbsolutePath();
+            String fileName = root + File.separator + "wiki" + index;
+            Log.d("flag", "-------------->initData: fileName" + fileName);
+            byte[] bytes = SdCardUtils.getbyteFromFile(fileName);
+            if (bytes != null) {
+                Wiki wiki = JSON.parseObject(new String(bytes), Wiki.class);
+                List<Wiki.DataBean> datas = wiki.getData();
+                mData.addAll(datas);
+                mAdapter.notifyDataSetChanged();
+            }
 
         }
-
     }
 
 
     private void initListView() {
-        mAdapter = new WikiPagerAdapter(getContext(), mData);
+
         final ListView listView = mListView.getRefreshableView();
         mListView.setAdapter(mAdapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent=new Intent(getContext(), DetailsActivity.class);
-                Bundle bundle=new Bundle();
-                bundle.putString("id",mData.get(position-1).getId());
-                bundle.putString("title",mData.get(position-1).getTitle());
-                Log.d("flag", "-------------->onItemClick: " +mData.get(0).getTitle());
-                bundle.putString("source",mData.get(position-1).getSource());
-                bundle.putString("time",mData.get(position-1).getCreate_time());
+                Intent intent = new Intent(getContext(), DetailsActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("id", mData.get(position - 1).getId());
+                bundle.putString("title", mData.get(position - 1).getTitle());
+                Log.d("flag", "-------------->onItemClick: " + mData.get(0).getTitle());
+                bundle.putString("source", mData.get(position - 1).getSource());
+                bundle.putString("time", mData.get(position - 1).getCreate_time());
                 intent.putExtras(bundle);
                 startActivity(intent);
             }
@@ -132,15 +139,15 @@ public class WikiFragment extends Fragment {
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(final AdapterView<?> parent, View view, final int position, long id) {
-                AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                 builder.setIcon(android.R.drawable.btn_star);
                 builder.setTitle("删除条目");
                 builder.setMessage("是否删除");
-                builder.setNegativeButton("取消",null);
+                builder.setNegativeButton("取消", null);
                 builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mData.remove(position-1);
+                        mData.remove(position - 1);
                         mAdapter.notifyDataSetChanged();
                     }
                 });
@@ -149,8 +156,6 @@ public class WikiFragment extends Fragment {
 
             }
         });
-
-
 
 
         mListView.setOnRefreshListener(new PullToRefreshBase.OnRefreshListener2<ListView>() {
@@ -189,15 +194,6 @@ public class WikiFragment extends Fragment {
         mListView.setMode(PullToRefreshBase.Mode.BOTH);
 
     }
-
-
-
-
-
-
-
-
-
 
 
     private void initView(View ret) {

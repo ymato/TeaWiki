@@ -26,6 +26,7 @@ import com.alibaba.fastjson.JSON;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +63,7 @@ public class ReferFragment extends Fragment {
                     Log.d("flag", "-------------->handleMessage: " + bytes.length);
                     //保存数据到sdCard
                     String root = getContext().getExternalCacheDir().getAbsolutePath();
-                    String fileName = "refer" + index;
+                    String fileName = File.separator+"refer" + index;
                     SdCardUtils.saveFile(bytes, root, fileName);
                     Refer refer = JSON.parseObject(new String(bytes), Refer.class);
                     Log.d("flag", "-------------->handleMessage: top.toString()" + refer.toString());
@@ -96,6 +97,7 @@ public class ReferFragment extends Fragment {
     }
 
     private void initData(int index) {
+        mAdapter = new ReferPagerAdapter(getContext(), mData);
         if (NetworkUtils.isConnected(getContext())) {
             //如果有网络从网上下载数据
             String path = String.format(url, index);
@@ -103,7 +105,16 @@ public class ReferFragment extends Fragment {
             Log.d("flag", "-------------->initData: " + path);
             getByteFromUrl(path, mHandler);
         } else {
-            //无网络从本地读取
+            String root = getContext().getExternalCacheDir().getAbsolutePath();
+            String fileName = root + File.separator + "wiki" + index;
+            Log.d("flag", "-------------->initData: fileName" + fileName);
+            byte[] bytes = SdCardUtils.getbyteFromFile(fileName);
+            if (bytes != null) {
+               Refer refer = JSON.parseObject(new String(bytes), Refer.class);
+                List<Refer.DataBean> datas = refer.getData();
+                mData.addAll(datas);
+                mAdapter.notifyDataSetChanged();
+            }
 
         }
 
@@ -111,7 +122,7 @@ public class ReferFragment extends Fragment {
 
 
     private void initListView() {
-        mAdapter = new ReferPagerAdapter(getContext(), mData);
+
         final ListView listView = mListView.getRefreshableView();
 
         mListView.setAdapter(mAdapter);

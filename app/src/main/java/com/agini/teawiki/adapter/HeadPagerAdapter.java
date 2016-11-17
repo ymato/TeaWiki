@@ -37,9 +37,12 @@ public class HeadPagerAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
 
-        View ret = mImageViews.get(position);
+
+
+       View ret = mImageViews.get(position);
 
         container.addView(ret);
+        //add listeners here if necessary
 
         return ret;
     }

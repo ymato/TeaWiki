@@ -26,6 +26,7 @@ import com.alibaba.fastjson.JSON;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,16 +38,13 @@ import static com.agini.teawiki.utils.HttpUtils.getByteFromUrl;
 public class BusinessFragment extends Fragment {
 
 
-   String url = "http://sns.maimaicha.com/api?apikey=b4f4ee31a8b9acc866ef2afb754c33e6&format=json&method=news.getListByType&type=53&rows=15&page=&d";
+    String url = "http://sns.maimaicha.com/api?apikey=b4f4ee31a8b9acc866ef2afb754c33e6&format=json&method=news.getListByType&type=53&rows=15&page=&d";
 
 
     private int index = 1;
     private PullToRefreshListView mListView;
     private BaseAdapter mAdapter;
     List<Business.DataBean> mData = new ArrayList<>();
-
-
-
 
 
     private Handler mHandler = new Handler() {
@@ -62,7 +60,7 @@ public class BusinessFragment extends Fragment {
                     Log.d("flag", "-------------->handleMessage: " + bytes.length);
                     //保存数据到sdCard
                     String root = getContext().getExternalCacheDir().getAbsolutePath();
-                    String fileName = "business" + index;
+                    String fileName = File.separator +"business" + index;
                     SdCardUtils.saveFile(bytes, root, fileName);
                     Business business = JSON.parseObject(new String(bytes), Business.class);
                     Log.d("flag", "-------------->handleMessage: top.toString()" + business.toString());
@@ -96,6 +94,7 @@ public class BusinessFragment extends Fragment {
     }
 
     private void initData(int index) {
+        mAdapter = new BusinessPagerAdapter(getContext(), mData);
         if (NetworkUtils.isConnected(getContext())) {
             //如果有网络从网上下载数据
             String path = String.format(url, index);
@@ -104,27 +103,37 @@ public class BusinessFragment extends Fragment {
             getByteFromUrl(path, mHandler);
         } else {
             //无网络从本地读取
+            String root = getContext().getExternalCacheDir().getAbsolutePath();
+            String fileName = root + File.separator + "top" + index;
+            Log.d("flag", "-------------->initData: fileName" + fileName);
+            byte[] bytes = SdCardUtils.getbyteFromFile(fileName);
+            if (bytes != null) {
+                Business business = JSON.parseObject(new String(bytes), Business.class);
+                List<Business.DataBean> datas = business.getData();
+                mData.addAll(datas);
+                mAdapter.notifyDataSetChanged();
+
+            }
 
         }
-
     }
 
 
     private void initListView() {
-        mAdapter = new BusinessPagerAdapter(getContext(), mData);
+
 
         final ListView listView = mListView.getRefreshableView();
         mListView.setAdapter(mAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent=new Intent(getContext(), DetailsActivity.class);
-                Bundle bundle=new Bundle();
-                bundle.putString("id",mData.get(position-1).getId());
-                bundle.putString("title",mData.get(position-1).getTitle());
-                Log.d("flag", "-------------->onItemClick: " +mData.get(0).getTitle());
-                bundle.putString("source",mData.get(position-1).getSource());
-                bundle.putString("time",mData.get(position-1).getCreate_time());
+                Intent intent = new Intent(getContext(), DetailsActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("id", mData.get(position - 1).getId());
+                bundle.putString("title", mData.get(position - 1).getTitle());
+                Log.d("flag", "-------------->onItemClick: " + mData.get(0).getTitle());
+                bundle.putString("source", mData.get(position - 1).getSource());
+                bundle.putString("time", mData.get(position - 1).getCreate_time());
                 intent.putExtras(bundle);
                 startActivity(intent);
             }
@@ -132,15 +141,15 @@ public class BusinessFragment extends Fragment {
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(final AdapterView<?> parent, View view, final int position, long id) {
-                AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                 builder.setIcon(android.R.drawable.btn_star);
                 builder.setTitle("删除条目");
                 builder.setMessage("是否删除");
-                builder.setNegativeButton("取消",null);
+                builder.setNegativeButton("取消", null);
                 builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mData.remove(position-1);
+                        mData.remove(position - 1);
                         mAdapter.notifyDataSetChanged();
                     }
                 });
@@ -149,8 +158,6 @@ public class BusinessFragment extends Fragment {
 
             }
         });
-
-
 
 
         mListView.setOnRefreshListener(new PullToRefreshBase.OnRefreshListener2<ListView>() {
@@ -189,15 +196,6 @@ public class BusinessFragment extends Fragment {
         mListView.setMode(PullToRefreshBase.Mode.BOTH);
 
     }
-
-
-
-
-
-
-
-
-
 
 
     private void initView(View ret) {
